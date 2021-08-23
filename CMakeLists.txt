@@ -6,6 +6,7 @@ project(laser_filters)
 ##############################################################################
 
 find_package(ament_cmake_auto REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 ament_auto_find_build_dependencies()
 
 ##############################################################################
@@ -13,6 +14,10 @@ ament_auto_find_build_dependencies()
 ##############################################################################
 
 ament_auto_add_library(laser_scan_filters SHARED src/laser_scan_filters.cpp)
+target_link_libraries(laser_scan_filters
+  ${Boost_FILESYSTEM_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+)
 
 set(FILTER_CHAINS
     scan_to_cloud_filter_chain
