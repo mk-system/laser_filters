@@ -62,6 +62,11 @@ namespace laser_filters
         return true;
       }
 
+      bool reconfigure()
+      {
+        return false;
+      }
+
       virtual ~LaserScanAngularBoundsFilterInPlace(){}
 
       bool update(const sensor_msgs::msg::LaserScan& input_scan, sensor_msgs::msg::LaserScan& filtered_scan){

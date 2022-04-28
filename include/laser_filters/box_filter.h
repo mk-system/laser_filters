@@ -72,6 +72,7 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
     {
       up_and_running_ = true;
       double min_x, min_y, min_z, max_x, max_y, max_z;
+      bool reconfigure_trigger;
       bool box_frame_set = getParam("box_frame", box_frame_);
       bool x_max_set = getParam("max_x", max_x);
       bool y_max_set = getParam("max_y", max_y);
@@ -79,6 +80,7 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
       bool x_min_set = getParam("min_x", min_x);
       bool y_min_set = getParam("min_y", min_y);
       bool z_min_set = getParam("min_z", min_z);
+      getParam("reconfigure_trigger", reconfigure_trigger);
 
       max_.setX(max_x);
       max_.setY(max_y);
@@ -118,6 +120,43 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
 
       return box_frame_set && x_max_set && y_max_set && z_max_set &&
              x_min_set && y_min_set && z_min_set;
+    }
+
+    bool reconfigure()
+    {
+      bool reconfigure_trigger;
+      getParam("reconfigure_trigger", reconfigure_trigger);
+      if (reconfigure_trigger)
+      {
+        double min_x, min_y, min_z, max_x, max_y, max_z;
+        getParam("max_x", max_x);
+        getParam("max_y", max_y);
+        getParam("max_z", max_z);
+        getParam("min_x", min_x);
+        getParam("min_y", min_y);
+        getParam("min_z", min_z);
+
+        max_.setX(max_x);
+        max_.setY(max_y);
+        max_.setZ(max_z);
+        min_.setX(min_x);
+        min_.setY(min_y);
+        min_.setZ(min_z);
+
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Set max_x to %.3f", max_x);
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Set max_y to %.3f", max_y);
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Set max_z to %.3f", max_z);
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Set min_x to %.3f", min_x);
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Set min_y to %.3f", min_y);
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Set min_z to %.3f", min_z);
+        RCLCPP_INFO(get_logger(), "[LaserScanBoxFilter::reconfigure] Reconfigure done");
+        return true;
+      }
+      else
+      {
+        RCLCPP_ERROR(get_logger(), "[LaserScanBoxFilter::reconfigure] Reconfigure is disabled");
+        return false;
+      }
     }
 
     bool update(

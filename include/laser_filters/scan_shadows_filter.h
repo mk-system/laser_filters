@@ -98,6 +98,11 @@ public:
     return true;
   }
 
+  bool reconfigure()
+  {
+    return false;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   virtual ~ScanShadowsFilter () { }
 
