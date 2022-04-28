@@ -28,6 +28,11 @@
  */
 
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 
@@ -59,6 +64,12 @@ protected:
   // Components for publishing
   sensor_msgs::msg::LaserScan msg_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr output_pub_;
+
+  // Logger
+  rclcpp::Logger logger_{rclcpp::get_logger("scan_to_scan_filter_chain")};
+
+  // Dynamic parameters handler
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
 
 public:
   // Constructor
@@ -95,6 +106,10 @@ public:
     
     // Advertise output
     output_pub_ = nh_->create_publisher<sensor_msgs::msg::LaserScan>("scan_filtered", 1000);
+
+    // Add callback for dynamic parameters
+    dyn_params_handler_ = node->add_on_set_parameters_callback(
+      std::bind(&ScanToScanFilterChain::dynamicParametersCallback, this, std::placeholders::_1));
   }
 
   // Destructor
@@ -115,6 +130,67 @@ public:
       //only publish result if filter succeeded
       output_pub_->publish(msg_);
     }
+  }
+
+  const std::vector<std::string> stringSplit(const std::string &input, const char &delimiter)
+  {
+    std::stringstream string_stream(input);
+    std::string token;
+    std::vector<std::string> output;
+    while (std::getline(string_stream, token, delimiter))
+    {
+      output.push_back(token);
+    }
+    return output;
+  }
+
+  rcl_interfaces::msg::SetParametersResult
+  dynamicParametersCallback(std::vector<rclcpp::Parameter> parameters)
+  {
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = false;
+
+    // XXX: only works for filter2 (LaserScanBoxFilter)
+    for (auto & parameter : parameters)
+    {
+      const auto & type = parameter.get_type();
+      const auto & name = parameter.get_name();
+      std::vector<std::string> results = stringSplit(name, '.');
+      std::string target_filter = results[0];
+      RCLCPP_INFO(logger_, "Reconfigure target: %s", target_filter.c_str());
+      if (target_filter == "filter2")
+      {
+        if (type == rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE)
+        {
+          RCLCPP_INFO(logger_, "Update %s to %.3f", name.c_str(), parameter.as_double());
+          result.successful = true;
+        }
+        else if (type == rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
+        {
+          if (name == "filter2.params.reconfigure_trigger")
+          {
+            bool reconfigure_trigger = parameter.as_bool();
+            if (reconfigure_trigger)
+            {
+              result.successful = filter_chain_.reconfigure(1);
+              if (!result.successful)
+              {
+                RCLCPP_ERROR(logger_, "Reconfigure filter2 failed");
+              }
+            }
+            else
+            {
+              RCLCPP_ERROR(logger_, "Reconfigure cannot be disabled during runtime");
+            }
+          }
+        }
+      }
+      else
+      {
+        RCLCPP_INFO(logger_, "Unsupport reconfigure for %s", target_filter.c_str());
+      }
+    }
+    return result;
   }
 };
 
