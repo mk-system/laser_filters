@@ -88,6 +88,11 @@ namespace laser_filters
       return true;
     };
 
+    bool reconfigure()
+    {
+      return false;
+    }
+
     /** \brief Update the filter and get the response
    * \param scan_in The new scan to filter
    * \param scan_out The filtered scan

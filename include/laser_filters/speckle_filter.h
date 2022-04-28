@@ -222,6 +222,12 @@ public:
     return true;
   }
   /////////////////////////////////////////////////////
+
+  bool reconfigure()
+  {
+    return false;
+  }
+
   bool update(const sensor_msgs::msg::LaserScan& input_scan, sensor_msgs::msg::LaserScan& output_scan){
     output_scan = input_scan;
     std::vector<bool> valid_ranges(output_scan.ranges.size(), false);

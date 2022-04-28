@@ -120,6 +120,11 @@ class LaserScanBoxFilter : public filters::FilterBase<sensor_msgs::msg::LaserSca
              x_min_set && y_min_set && z_min_set;
     }
 
+    bool reconfigure()
+    {
+      return false;
+    }
+
     bool update(
         const sensor_msgs::msg::LaserScan &input_scan,
         sensor_msgs::msg::LaserScan &output_scan)
